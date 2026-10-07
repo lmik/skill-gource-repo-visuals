@@ -1,6 +1,6 @@
 """Raw RGBA overlay frames (stats top-left, version top-right), one per video frame, to stdout.
 
-usage: overlay.py WORK [--show-version-tags] [--preview N BG.png OUT]
+usage: overlay.py WORK [--show-version-tags] [--lang en|de] [--preview N BG.png OUT]
        without --preview: 1920x170 rgba frames on stdout; with it: frame N's panel composited onto BG.png
 needs: Pillow; WORK/timeline.json, WORK/frame-ts.json (+ WORK/versions.json with --show-version-tags)
 """
@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 ap = argparse.ArgumentParser()
 ap.add_argument("work")
 ap.add_argument("--show-version-tags", action="store_true")
+ap.add_argument("--lang", choices=("en", "de"), default="en")
 ap.add_argument("--preview", nargs=3, metavar=("FRAME", "BG", "OUT"))
 args = ap.parse_args()
 WORK = args.work
@@ -61,8 +62,16 @@ def version_at(i):
     return versions[j][1] if j >= 0 else None
 
 
-def de(x):
-    return f"{x:,}".replace(",", ".")
+LABELS = {
+    "en": {"sep": ",", "loc": "Lines of code: {}", "tree": "{} files in {} folders", "changes": "Changes: ",
+           "version": "Version: {}"},
+    "de": {"sep": ".", "loc": "Codezeilen: {}", "tree": "{} Dateien in {} Ordnern", "changes": "Änderungen: ",
+           "version": "Version: {}"},
+}[args.lang]
+
+
+def num(x):
+    return f"{x:,}".replace(",", LABELS["sep"])
 
 
 cache = {}
@@ -73,11 +82,11 @@ def render(e, ver):
     if key in cache:
         return cache[key]
     cache.clear()  # full-width frames are 1.3 MB; states only move forward
-    lines = [[(f"Codezeilen: {de(e['loc'])}", WHITE)],
-             [(f"{de(e['files'])} Dateien in {de(e['dirs'])} Ordnern", WHITE)],
-             [("Änderungen: ", WHITE), (f"+{de(e['add'])}", GREEN), (" / ", WHITE), (f"−{de(e['del'])}", RED)]]
+    lines = [[(LABELS["loc"].format(num(e["loc"])), WHITE)],
+             [(LABELS["tree"].format(num(e["files"]), num(e["dirs"])), WHITE)],
+             [(LABELS["changes"], WHITE), (f"+{num(e['add'])}", GREEN), (" / ", WHITE), (f"−{num(e['del'])}", RED)]]
     if ver:
-        s = f"Version: {ver}"
+        s = LABELS["version"].format(ver)
         lines.append([(s, WHITE, W - RIGHT - FONT.getlength(s), TOP)])
     txt, shadow = Image.new("RGBA", (W, H)), Image.new("RGBA", (W, H))
     dt, ds = ImageDraw.Draw(txt), ImageDraw.Draw(shadow)

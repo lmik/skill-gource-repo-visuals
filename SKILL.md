@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Gource video with stats overlay
 
-Produces a 1920×1080 / 60 fps MP4 of a branch's history. The top left shows `Codezeilen: …` / `… Dateien in … Ordnern` / `Änderungen: +… / −…`, and with `--show-version-tags` the top right shows `Version: vX.Y.Z`. All of it updates per commit, in sync with the animation.
+Produces a 1920×1080 / 60 fps MP4 of a branch's history. The top left shows `Lines of code: …` / `… files in … folders` / `Changes: +… / −…`, and with `--show-version-tags` the top right shows `Version: vX.Y.Z`. All of it updates per commit, in sync with the animation. `--lang de` switches the labels and number formatting to German (`Codezeilen: 65.017` / `… Dateien in … Ordnern` / `Änderungen: …`).
 
 Use 1920×1080 throughout: the date-strip crop in step 4 depends on that resolution.
 
@@ -27,6 +27,7 @@ Settle these, and set them once for every later step:
 S=<this skill's base directory>/scripts
 REPO=<absolute repo path>   REF=<branch>   WORK=<new empty dir>   OUT=<output dir>
 VFLAG=--show-version-tags   # only if the invocation arguments contain it; otherwise VFLAG=
+LFLAG="--lang de"           # only if the invocation arguments contain it; otherwise LFLAG=
 ```
 
 - `REPO` defaults to the git repo of the current directory.
@@ -38,7 +39,7 @@ Ask the user only for what neither the invocation nor these defaults settle.
 
 The **version label** is opt-in. When `$VFLAG` is empty, skip `versions.py` and every version check; the repo needs no tags at all.
 
-**Done when:** all five variables are set and `REPO` is a git repo that contains `REF`.
+**Done when:** all five path/ref variables are set and `REPO` is a git repo that contains `REF`.
 
 ### 2. Requirements
 
@@ -122,8 +123,8 @@ python3 $S/timeline.py "$REPO" $REF "$WORK"
 [ -n "$VFLAG" ] && python3 $S/versions.py "$REPO" $REF "$WORK"
 ```
 
-- **Codezeilen:** lines in code files only (the `CODE` set in `timeline.py`). Lockfiles, SVG, Markdown, JSON and YAML are left out.
-- **Änderungen:** cumulative added and deleted code lines, with the same carry rule, so cherry-picked copies count once. It ends a few hundred lines away from Codezeilen because conflict resolutions inside merges aren't counted.
+- **Lines of code:** lines in code files only (the `CODE` set in `timeline.py`). Lockfiles, SVG, Markdown, JSON and YAML are left out.
+- **Changes:** cumulative added and deleted code lines, with the same carry rule, so cherry-picked copies count once. Its net (added − deleted) ends a few hundred lines away from lines of code because conflict resolutions inside merges aren't counted.
 - **Version** (version label only): the highest semver tag reached so far. Backported hotfix tags that arrive after a higher version (e.g. a prod `v28.0.x` after `v30.0.0`) never show, because otherwise the version would run backwards. `-RCn` sorts before its release and `-fix.N` after it. Tags that aren't semver are ignored.
 
 **Done when:** the `final` line of `timeline.py` equals its `truth` line for loc, files and dirs. A mismatch means the replay logic is wrong; fix it rather than shipping. Also scan the biggest jumps between consecutive events: each one should match a real commit (a reformat, a big feature), not double counting that gets corrected at a later merge.
@@ -132,7 +133,7 @@ python3 $S/timeline.py "$REPO" $REF "$WORK"
 
 ```sh
 ffmpeg -v error -ss 50 -i "$WORK/base.avi" -frames:v 1 "$WORK/bg.png"
-"$WORK/venv/bin/python" $S/overlay.py "$WORK" $VFLAG --preview 3000 "$WORK/bg.png" "$WORK/preview.png"
+"$WORK/venv/bin/python" $S/overlay.py "$WORK" $VFLAG $LFLAG --preview 3000 "$WORK/bg.png" "$WORK/preview.png"
 ```
 
 **Done when:** you've looked at `preview.png` and the overlay is legible. The left block and the version should share the 56 px side margin and the 48 px top margin, and, with the version label, the version should match the tag that was current at the date gource shows.
@@ -140,7 +141,7 @@ ffmpeg -v error -ss 50 -i "$WORK/base.avi" -frames:v 1 "$WORK/bg.png"
 ### 7. Composite
 
 ```sh
-"$WORK/venv/bin/python" $S/overlay.py "$WORK" $VFLAG | ffmpeg -v error -y -i "$WORK/base.avi" \
+"$WORK/venv/bin/python" $S/overlay.py "$WORK" $VFLAG $LFLAG | ffmpeg -v error -y -i "$WORK/base.avi" \
   -f rawvideo -pix_fmt rgba -s 1920x170 -r 60 -i - \
   -filter_complex "[0:v][1:v]overlay=0:0:shortest=1,format=yuv420p" \
   -c:v libx264 -preset slow -crf 18 -profile:v high -movflags +faststart "$OUT/gource.overlay.mp4"
