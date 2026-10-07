@@ -4,7 +4,7 @@ usage: overlay.py WORK [--show-version-tags] [--preview N BG.png OUT]
        without --preview: 1920x170 rgba frames on stdout; with it: frame N's panel composited onto BG.png
 needs: Pillow; WORK/timeline.json, WORK/frame-ts.json (+ WORK/versions.json with --show-version-tags)
 """
-import argparse, bisect, json, sys
+import argparse, bisect, json, os, subprocess, sys
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ap = argparse.ArgumentParser()
@@ -14,7 +14,25 @@ ap.add_argument("--preview", nargs=3, metavar=("FRAME", "BG", "OUT"))
 args = ap.parse_args()
 WORK = args.work
 W, H, FPS = 1920, 170, 60
-FONT = ImageFont.truetype("/opt/homebrew/share/gource/fonts/FreeSans.ttf", 24)  # gource's own font
+FONT_SIZE = 24
+
+
+def find_font():
+    """gource's own FreeSans, so the overlay matches gource's text; GOURCE_FONT overrides."""
+    try:
+        brew = subprocess.run(["brew", "--prefix"], capture_output=True, text=True).stdout.strip()
+    except OSError:
+        brew = ""
+    for f in (os.environ.get("GOURCE_FONT"), brew and f"{brew}/share/gource/fonts/FreeSans.ttf",
+              "/usr/share/gource/fonts/FreeSans.ttf", "/usr/local/share/gource/fonts/FreeSans.ttf",
+              "/usr/share/fonts/truetype/freefont/FreeSans.ttf"):
+        if f and os.path.isfile(f):
+            return ImageFont.truetype(f, FONT_SIZE)
+    print("FreeSans.ttf not found, using Pillow's default font (set GOURCE_FONT)", file=sys.stderr)
+    return ImageFont.load_default(size=FONT_SIZE)
+
+
+FONT = find_font()
 WHITE, GREEN, RED = (255, 255, 255), (87, 200, 110), (240, 90, 85)
 LEFT, TOP, LINE, RIGHT = 56, 48, 34, 56
 
