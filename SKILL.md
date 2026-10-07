@@ -1,6 +1,6 @@
 ---
 name: gource-repo-visuals
-description: Render a gource video of a git branch with a stats overlay (code lines, files/folders, +/- lines; current version tag with --show-version-tags) as a QuickTime-playable MP4.
+description: Render a gource video of a git branch with a stats overlay (code lines, files/folders, +/- lines; current version tag with --show-version-tags; German labels with --lang de) as a QuickTime-playable MP4.
 disable-model-invocation: true
 ---
 
@@ -54,7 +54,7 @@ If the script reports anything `missing`, show the user the table and ask how to
 - **Automatic (recommended):** you run the `INSTALL` commands after this one confirmation. Commands that need a password or a GUI can't run from your shell: the Homebrew installer, `sudo apt-get` and `xcode-select --install`. Hand those to the user (run in their own terminal, or click through the Xcode dialog) and wait until they say they're done. Run `brew install …` yourself.
 - **Guided:** for each missing item, in order (Xcode CLT → Homebrew → packages), give one line on what it's for, plus the exact command. The user runs it; you wait.
 
-After Homebrew installs, it prints a `brew shellenv` line for the shell profile. If the check then says "installed but not on PATH", run that `eval` line in your own commands for the rest of the session and remind the user to add it to `~/.zprofile`.
+After Homebrew installs, it prints a `brew shellenv` line for the shell profile. If the check then says "installed but not on PATH", run that `eval` line in your own commands for the rest of the session and remind the user to add it to their shell profile (e.g. `~/.zprofile`).
 
 Re-run the check after each round of installs. A `warn` doesn't block. Explain it once and continue:
 - no swift: the playability check falls back to ffmpeg;
@@ -125,7 +125,7 @@ python3 $S/timeline.py "$REPO" $REF "$WORK"
 
 - **Lines of code:** lines in code files only (the `CODE` extension set in `timeline.py`, covering the common languages). Lockfiles, SVG, Markdown, JSON and YAML are left out. If the repo's main language isn't in `CODE`, add its extensions before running.
 - **Changes:** cumulative added and deleted code lines, with the same carry rule, so cherry-picked copies count once. Its net (added − deleted) ends a few hundred lines away from lines of code because conflict resolutions inside merges aren't counted.
-- **Version** (version label only): the highest semver tag reached so far. Backported hotfix tags that arrive after a higher version (e.g. a prod `v28.0.x` after `v30.0.0`) never show, because otherwise the version would run backwards. `-RCn` sorts before its release and `-fix.N` after it. Tags that aren't semver are ignored.
+- **Version** (version label only): the highest semver tag reached so far. Backported hotfix tags that arrive after a higher version (e.g. a `v1.4.x` patch tagged after `v2.0.0`) never show, because otherwise the version would run backwards. `-RCn` sorts before its release and `-fix.N` after it. Tags that aren't semver are ignored.
 
 **Done when:** the `final` line of `timeline.py` equals its `truth` line for loc, files and dirs. A mismatch means the replay logic is wrong; fix it rather than shipping. Also scan the biggest jumps between consecutive events: each one should match a real commit (a reformat, a big feature), not double counting that gets corrected at a later merge.
 
