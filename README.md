@@ -37,6 +37,16 @@ The skill only runs when you invoke it explicitly:
 
 Claude asks for the repo, branch and output folder, then renders. A ~2-year history gives about 100 s of video and needs about 3 GB of scratch space.
 
+## Requirements
+
+gource, ffmpeg (with libx264), tesseract (with English data), git and Python ≥ 3.8. Pillow is installed into a scratch venv automatically. On a fresh machine the skill's first step runs `scripts/check-requirements.sh`, shows what's missing, and either installs it after your confirmation or walks you through it. To check by hand:
+
+```bash
+scripts/check-requirements.sh        # exit 0 = ready; otherwise prints the install commands
+```
+
+On macOS everything comes from Homebrew (`brew install gource ffmpeg tesseract`). Debian/Ubuntu works too (`apt-get install gource ffmpeg tesseract-ocr tesseract-ocr-eng python3-venv`, plus `xvfb` when there's no display). On Windows, use WSL.
+
 ## License
 
 MIT
