@@ -1,11 +1,15 @@
-"""Per-commit stats (code lines, files, dirs, cumulative +/-) in gource order, anchored to dev's real trees.
+"""Per-commit stats (code lines, files, dirs, cumulative +/-) in gource order, anchored to REF's real trees.
 
 usage: timeline.py REPO REF WORK   -> WORK/timeline.json
 """
 import json, subprocess, sys
 
 REPO, REF, WORK = sys.argv[1:4]
-CODE = {"ts", "tsx", "js", "jsx", "mjs", "cjs", "mts", "cts", "css", "scss", "sql", "prisma", "sh"}
+# Source-code extensions; lockfiles, docs, data and assets (json, yaml, md, svg, ...) don't count.
+CODE = {"ts", "tsx", "js", "jsx", "mjs", "cjs", "mts", "cts", "vue", "svelte", "astro", "html", "css", "scss", "sass",
+        "less", "py", "rb", "php", "go", "rs", "java", "kt", "kts", "scala", "groovy", "swift", "m", "mm", "c", "h",
+        "cc", "cpp", "cxx", "hpp", "hh", "cs", "fs", "vb", "dart", "ex", "exs", "erl", "clj", "lua", "pl", "r", "jl",
+        "hs", "ml", "zig", "sql", "prisma", "graphql", "gql", "proto", "sh", "bash", "zsh", "fish", "ps1"}
 
 
 def is_code(p):

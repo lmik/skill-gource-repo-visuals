@@ -123,7 +123,7 @@ python3 $S/timeline.py "$REPO" $REF "$WORK"
 [ -n "$VFLAG" ] && python3 $S/versions.py "$REPO" $REF "$WORK"
 ```
 
-- **Lines of code:** lines in code files only (the `CODE` set in `timeline.py`). Lockfiles, SVG, Markdown, JSON and YAML are left out.
+- **Lines of code:** lines in code files only (the `CODE` extension set in `timeline.py`, covering the common languages). Lockfiles, SVG, Markdown, JSON and YAML are left out. If the repo's main language isn't in `CODE`, add its extensions before running.
 - **Changes:** cumulative added and deleted code lines, with the same carry rule, so cherry-picked copies count once. Its net (added − deleted) ends a few hundred lines away from lines of code because conflict resolutions inside merges aren't counted.
 - **Version** (version label only): the highest semver tag reached so far. Backported hotfix tags that arrive after a higher version (e.g. a prod `v28.0.x` after `v30.0.0`) never show, because otherwise the version would run backwards. `-RCn` sorts before its release and `-fix.N` after it. Tags that aren't semver are ignored.
 
